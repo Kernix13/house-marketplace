@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import Spinner from "../components/Spinner";
 import ListingItem from "../components/ListingItem";
 
-function Offers() {
+function Category() {
   const [listings, setListings] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +19,7 @@ function Offers() {
         const listingsRef = collection(db, "listings");
 
         // create a query
-        const q = query(listingsRef, where("offer", "==", true), orderBy("timestamp", "desc"), limit(10));
+        const q = query(listingsRef, where("type", "==", params.categoryName), orderBy("timestamp", "desc"), limit(10));
 
         // execute query
         const querySnap = await getDocs(q);
@@ -41,12 +41,12 @@ function Offers() {
     };
 
     fetchListings();
-  }, []);
+  }, [params.categoryName]);
 
   return (
     <div className="category">
       <header>
-        <p className="pageHeader">Rent and Sale Offers</p>
+        <p className="pageHeader">{params.categoryName === "rent" ? "Places for rent" : "Places for sale"}</p>
       </header>
 
       {loading ? (
@@ -62,10 +62,10 @@ function Offers() {
           </main>
         </>
       ) : (
-        <p>There are no current offers</p>
+        <p>No listings for {params.categoryName}</p>
       )}
     </div>
   );
 }
 
-export default Offers;
+export default Category;
