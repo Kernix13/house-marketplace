@@ -20,7 +20,7 @@ function Listing() {
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
-  const priceFormat = /B(?=(d{3})+(?!d))/g;
+  const priceFormat = /\B(?=(\d{3})+(?!\d))/g;
 
   const navigate = useNavigate("/");
   const params = useParams();
@@ -80,11 +80,11 @@ function Listing() {
 
       <div className="listingDetails">
         <p className="listingName">
-          {listing.name} - ${listing.offer ? listing.discountedPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : listing.regularPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+          {listing.name} - ${listing.offer ? listing.discountedPrice.toString().replace(priceFormat, ",") : listing.regularPrice.toString().replace(priceFormat, ",")}
         </p>
         <p className="listingLocation">{listing.location}</p>
         <p className="listingType">For {listing.type === "rent" ? "Rent" : "Sale"}</p>
-        {listing.offer && <p className="discountPrice">${(listing.regularPrice - listing.discountedPrice).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} discount</p>}
+        {listing.offer && <p className="discountPrice">${(listing.regularPrice - listing.discountedPrice).toString().replace(priceFormat, ",")} discount</p>}
 
         <ul className="listingDetailsList">
           <li>{listing.bedrooms > 1 ? `${listing.bedrooms} Bedrooms` : "1 Bedroom"}</li>

@@ -36,7 +36,7 @@ function Slider() {
       setListings(listings);
       setLoading(false);
     };
-
+    // comment
     fetchListings();
   }, []);
 
@@ -60,7 +60,8 @@ function Slider() {
                   className="swiperSlideDiv"
                   style={{
                     background: `url(${data.imgUrls[0]}) center no-repeat`,
-                    backgroundSize: "cover"
+                    backgroundSize: "cover",
+                    cursor: "pointer"
                   }}
                 >
                   <p className="swiperSlideText">{data.name}</p>

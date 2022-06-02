@@ -1,17 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.config";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
 import Spinner from "../components/Spinner";
 
-function CreateListing() {
+function EditListing() {
   // eslint-disable-next-line
   const [geolocationEnabled, setGeolocationEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [listing, setListing] = useState(false);
   const [formData, setFormData] = useState({
     type: "rent",
     name: "",
@@ -32,8 +33,36 @@ function CreateListing() {
 
   const auth = getAuth();
   const navigate = useNavigate();
+  const params = useParams();
   const isMounted = useRef(true);
 
+  // Redirect if listing is not users
+  useEffect(() => {
+    if (listing && listing.userRef !== auth.currentUser.uid) {
+      toast.error("You can not edit this listing");
+      navigate("/");
+    }
+  }, [listing, auth.currentUser.uid, navigate]);
+
+  // Fetch listing to edit
+  useEffect(() => {
+    setLoading(true);
+    const fetchListing = async () => {
+      const docRef = doc(db, "listings", params.listingId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setListing(docSnap.data());
+        setFormData({ ...docSnap.data(), address: docSnap.data().location });
+        setLoading(false);
+      } else {
+        navigate("/");
+        toast.error("Listing does not exiat");
+      }
+    };
+    fetchListing();
+  }, [navigate, params.listingId]);
+
+  // Set userRef to logged in user
   useEffect(() => {
     if (isMounted) {
       onAuthStateChanged(auth, user => {
@@ -119,7 +148,7 @@ function CreateListing() {
 
     const imgUrls = await Promise.all([...images].map(img => storeImage(img))).catch(() => {
       setLoading(false);
-      toast.error("Image uplod failed");
+      toast.error("Image upload failed");
       return;
     });
 
@@ -131,11 +160,13 @@ function CreateListing() {
     };
 
     formDataCopy.location = address;
-    delete formDataCopy.images;
+    // delete formDataCopy.images;
     delete formDataCopy.address;
     !formDataCopy.offer && delete formDataCopy.discountedPrice;
 
-    const docRef = await addDoc(collection(db, "listings"), formDataCopy);
+    // Update listing
+    const docRef = doc(db, "listings", params.listingId);
+    await updateDoc(docRef, formDataCopy);
 
     setLoading(false);
     toast.success("Listing saved");
@@ -160,6 +191,8 @@ function CreateListing() {
       }));
     }
 
+    // formDataCopy.images
+
     // Text/Booleans/Numbers
     if (!e.target.files) {
       setFormData(prev => ({
@@ -176,7 +209,7 @@ function CreateListing() {
   return (
     <div className="profile">
       <header>
-        <p className="pageHeader">Create a listing</p>
+        <p className="pageHeader">Edit listing</p>
       </header>
 
       <main>
@@ -265,10 +298,12 @@ function CreateListing() {
           )}
 
           <label className="formLabel">Images</label>
-          <p className="imagesInfo">The first image will be the cover (max 6).</p>
+          <p className="imagesInfo">
+            You <em>MUST</em> upload at least 1 image to update your listing (max 6).
+          </p>
           <input className="formInputFile" type="file" id="images" onChange={onMutate} max="6" accept=".jpg,.png,.jpeg" multiple required />
-          <button type="submit" className="primaryButton createListingButton">
-            Create Listing
+          <button type="submit" className="primaryButton editListingButton">
+            Update Listing
           </button>
         </form>
       </main>
@@ -276,4 +311,4 @@ function CreateListing() {
   );
 }
 
-export default CreateListing;
+export default EditListing;
