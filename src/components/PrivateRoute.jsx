@@ -9,7 +9,7 @@ function PrivateRoute() {
     return <Spinner />;
   }
 
-  return loggedIn ? <Outlet /> : <Navigate tp="/sign-in" />;
+  return loggedIn ? <Outlet /> : <Navigate to="/sign-in" />;
 }
 
 export default PrivateRoute;
